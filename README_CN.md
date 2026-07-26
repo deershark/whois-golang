@@ -4,7 +4,6 @@
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/deershark/whois-golang.svg)](https://pkg.go.dev/github.com/deershark/whois-golang)
 [![CI](https://github.com/deershark/whois-golang/actions/workflows/ci.yml/badge.svg)](https://github.com/deershark/whois-golang/actions/workflows/ci.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/deershark/whois-golang)](https://goreportcard.com/report/github.com/deershark/whois-golang)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 零依赖的 Go 域名注册信息查询库。

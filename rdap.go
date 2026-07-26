@@ -41,7 +41,7 @@ func (c *Client) rdapGet(ctx context.Context, path string) ([]byte, string, int,
 		}
 		if r.StatusCode >= 300 && r.StatusCode < 400 {
 			loc := r.Header.Get("Location")
-			r.Body.Close()
+			_ = r.Body.Close()
 			if loc == "" {
 				return nil, "", 0, fmt.Errorf("whois: rdap: %d without Location", r.StatusCode)
 			}
@@ -60,7 +60,7 @@ func (c *Client) rdapGet(ctx context.Context, path string) ([]byte, string, int,
 	if resp == nil {
 		return nil, "", 0, fmt.Errorf("whois: rdap: too many redirects")
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 4<<20))
 	if err != nil {
 		return nil, "", 0, err

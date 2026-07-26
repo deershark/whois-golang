@@ -1,0 +1,24 @@
+version: "2"
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - misspell
+    - staticcheck
+    - unconvert
+    - unused
+  exclusions:
+    rules:
+      # Tests intentionally ignore errors in a few places (fake servers, cleanup).
+      - path: _test\.go
+        linters:
+          - errcheck
+      # Proper nouns misspell doesn't know.
+      - text: "`Nominet`"
+        linters:
+          - misspell
+      - text: "`immobilien`"
+        linters:
+          - misspell

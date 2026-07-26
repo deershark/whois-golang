@@ -38,10 +38,7 @@ func (c *Client) whoisQuery(ctx context.Context, domain, tld string) (*Record, e
 	// Thin registries (com/net/...) point at the registrar's own WHOIS.
 	if registered && c.followReferral && parsed.WhoisServer != "" &&
 		!strings.EqualFold(parsed.WhoisServer, server) {
-		refServer := parsed.WhoisServer
-		if strings.HasPrefix(refServer, "whois://") {
-			refServer = strings.TrimPrefix(refServer, "whois://")
-		}
+		refServer := strings.TrimPrefix(parsed.WhoisServer, "whois://")
 		if raw2, err := c.queryServer(ctx, refServer, domain); err == nil {
 			if parsed2, registered2 := Parse(tld, raw2); registered2 {
 				mergeParsed(parsed2, parsed)
@@ -110,7 +107,7 @@ func (c *Client) queryServer(ctx context.Context, server, query string) (string,
 	if err != nil {
 		return "", err
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 	_ = conn.SetDeadline(time.Now().Add(c.timeout))
 	if _, err := io.WriteString(conn, query+"\r\n"); err != nil {
 		return "", err
