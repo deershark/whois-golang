@@ -28,6 +28,7 @@ google.shop  → RDAP  (rdap.gmoregistry.net)  .shop 已于 2026 年关闭 43 �
 - **内嵌服务器映射表** —— 约 580 条 TLD → WHOIS 服务器映射，与 `whois.iana.org` 交叉核实；未收录的 TLD 运行时通过 IANA referral 动态发现并缓存。
 - **thin registry referral 跟随**（可选）—— Verisign 式 thin 响应可进一步查询注册商自己的 WHOIS 获取完整数据。
 - **IDN 支持** —— 内置 RFC 3492 punycode 编码（`münchen.de` → `xn--mnchen-3ya.de`），无任何外部依赖。
+- **IP 与 AS 号查询** —— RDAP 通过五大 RIR 覆盖所有已分配 IP 段与 AS 号；WHOIS 兜底经 `whois.iana.org` referral 定位 RIR，解析 ARIN/RIPE/APNIC/LACNIC 格式。
 
 ## 安装
 
@@ -60,6 +61,27 @@ func main() {
 	fmt.Println(rec.Parsed.Expiry)      // 2027-05-31
 }
 ```
+
+### IP 与 AS 号查询
+
+```go
+rec, err := c.QueryIP("8.8.8.8") // → RDAP，经 rdap.arin.net 应答
+if err != nil {
+	panic(err)
+}
+fmt.Println(rec.Source, rec.Server)              // rdap rdap.arin.net
+fmt.Println(rec.Parsed.Name)                     // GOGL
+fmt.Println(rec.Parsed.StartAddress, rec.Parsed.EndAddress) // 8.8.8.0 8.8.8.255
+fmt.Println(rec.Parsed.CIDR)                     // 8.8.8.0/24
+fmt.Println(rec.Parsed.Entities[0].Contact.Name) // Google LLC
+
+asn, err := c.QueryASN(15169) // 仅 RDAP（bootstrap 覆盖所有已分配 AS 号）
+fmt.Println(asn.Parsed.Name) // GOOGLE
+```
+
+禁用 RDAP 时（`WithPreferRDAP(false)`），`QueryIP` 会通过 `whois.iana.org`
+referral 找到负责该地址段的 RIR，并解析经典 WHOIS 响应（ARIN 的
+`NetRange`/`CIDR`、RIPE/APNIC 的 `inetnum`/`netname`、LACNIC 等）。
 
 ### 可选项
 

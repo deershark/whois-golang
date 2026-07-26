@@ -11,12 +11,13 @@ import (
 	"time"
 )
 
-// rdapQuery asks the configured RDAP endpoint for domain. With the default
-// rdap.org bootstrap the first response is a redirect to the authoritative
-// server; a direct 404 means the TLD has no RDAP deployment (ErrNoRDAP).
-func (c *Client) rdapQuery(ctx context.Context, domain string) (*Record, error) {
-	// Never follow redirects silently: the first hop tells us whether the
-	// TLD is RDAP-enabled at all.
+// rdapGet fetches an RDAP path (e.g. "/domain/example.com") from the
+// configured endpoint. With the default rdap.org bootstrap the first response
+// is a redirect to the authoritative server; a direct 404 there means the
+// resource has no RDAP service (ErrNoRDAP). Redirects are never followed
+// silently: the first hop tells us whether the resource is RDAP-enabled.
+// It returns the body, the answering server's host and the final status code.
+func (c *Client) rdapGet(ctx context.Context, path string) ([]byte, string, int, error) {
 	hc := &http.Client{
 		Transport: c.httpClient.Transport,
 		Timeout:   c.httpClient.Timeout,
@@ -25,28 +26,28 @@ func (c *Client) rdapQuery(ctx context.Context, domain string) (*Record, error) 
 		},
 	}
 
-	u := c.rdapBase + "/domain/" + domain
+	u := c.rdapBase + path
 	redirected := false
 	var resp *http.Response
 	for i := 0; i < 5; i++ {
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
 		if err != nil {
-			return nil, err
+			return nil, "", 0, err
 		}
 		req.Header.Set("Accept", "application/rdap+json, application/json")
 		r, err := hc.Do(req)
 		if err != nil {
-			return nil, err
+			return nil, "", 0, err
 		}
 		if r.StatusCode >= 300 && r.StatusCode < 400 {
 			loc := r.Header.Get("Location")
 			r.Body.Close()
 			if loc == "" {
-				return nil, fmt.Errorf("whois: rdap: %d without Location", r.StatusCode)
+				return nil, "", 0, fmt.Errorf("whois: rdap: %d without Location", r.StatusCode)
 			}
 			nu, err := url.Parse(loc)
 			if err != nil {
-				return nil, err
+				return nil, "", 0, err
 			}
 			base, _ := url.Parse(u)
 			u = base.ResolveReference(nu).String()
@@ -57,16 +58,31 @@ func (c *Client) rdapQuery(ctx context.Context, domain string) (*Record, error) 
 		break
 	}
 	if resp == nil {
-		return nil, fmt.Errorf("whois: rdap: too many redirects")
+		return nil, "", 0, fmt.Errorf("whois: rdap: too many redirects")
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 4<<20))
 	if err != nil {
-		return nil, err
+		return nil, "", 0, err
 	}
 	server := resp.Request.URL.Host
 
-	switch resp.StatusCode {
+	switch {
+	case resp.StatusCode == http.StatusNotFound && c.rdapBootstrap && !redirected:
+		return nil, server, resp.StatusCode, ErrNoRDAP
+	case resp.StatusCode >= 400 && resp.StatusCode != http.StatusNotFound:
+		return nil, server, resp.StatusCode, fmt.Errorf("whois: rdap: unexpected status %s", resp.Status)
+	}
+	return body, server, resp.StatusCode, nil
+}
+
+// rdapQuery asks the configured RDAP endpoint for domain.
+func (c *Client) rdapQuery(ctx context.Context, domain string) (*Record, error) {
+	body, server, status, err := c.rdapGet(ctx, "/domain/"+domain)
+	if err != nil {
+		return nil, err
+	}
+	switch status {
 	case http.StatusOK:
 		p, err := parseRDAP(body)
 		if err != nil {
@@ -81,9 +97,6 @@ func (c *Client) rdapQuery(ctx context.Context, domain string) (*Record, error) 
 			Parsed:     p,
 		}, nil
 	case http.StatusNotFound:
-		if c.rdapBootstrap && !redirected {
-			return nil, ErrNoRDAP
-		}
 		return &Record{
 			Domain:     domain,
 			Source:     SourceRDAP,
@@ -93,7 +106,7 @@ func (c *Client) rdapQuery(ctx context.Context, domain string) (*Record, error) 
 			Parsed:     &ParsedInfo{DomainName: domain},
 		}, nil
 	default:
-		return nil, fmt.Errorf("whois: rdap: unexpected status %s", resp.Status)
+		return nil, fmt.Errorf("whois: rdap: unexpected status %d", status)
 	}
 }
 
@@ -157,27 +170,7 @@ func parseRDAP(body []byte) (*ParsedInfo, error) {
 		p.DomainName = d.UnicodeName
 	}
 
-	for _, e := range d.Events {
-		t, err := time.Parse(time.RFC3339, e.Date)
-		if err != nil {
-			continue
-		}
-		t = t.UTC()
-		switch strings.ToLower(e.Action) {
-		case "registration", "reregistration":
-			if p.Created == nil {
-				p.Created = &t
-			}
-		case "expiration":
-			p.Expiry = &t
-		case "last changed":
-			p.Updated = &t
-		case "last update of rdap database":
-			if p.Updated == nil {
-				p.Updated = &t
-			}
-		}
-	}
+	rdapDates(d.Events, &p.Created, &p.Updated, &p.Expiry)
 
 	for _, ns := range d.Nameservers {
 		name := strings.TrimSuffix(strings.ToLower(ns.LDHName), ".")
@@ -229,6 +222,48 @@ func parseRDAP(body []byte) (*ParsedInfo, error) {
 	}
 	walk(d.Entities)
 	return p, nil
+}
+
+// rdapDates maps RDAP events onto created/updated/expiry timestamps.
+func rdapDates(events []rdapEvent, created, updated, expiry **time.Time) {
+	for _, e := range events {
+		t, err := time.Parse(time.RFC3339, e.Date)
+		if err != nil {
+			continue
+		}
+		t = t.UTC()
+		switch strings.ToLower(e.Action) {
+		case "registration", "reregistration":
+			if *created == nil {
+				*created = &t
+			}
+		case "expiration":
+			*expiry = &t
+		case "last changed":
+			*updated = &t
+		case "last update of rdap database":
+			if *updated == nil {
+				*updated = &t
+			}
+		}
+	}
+}
+
+// rdapEntityContacts flattens an entity tree into role contacts.
+func rdapEntityContacts(ents []rdapEntity) []EntityContact {
+	var out []EntityContact
+	var walk func(ents []rdapEntity)
+	walk = func(ents []rdapEntity) {
+		for _, e := range ents {
+			ct := vcardContact(e.VCardArray)
+			if len(e.Roles) > 0 {
+				out = append(out, EntityContact{Handle: e.Handle, Roles: e.Roles, Contact: ct})
+			}
+			walk(e.Entities)
+		}
+	}
+	walk(ents)
+	return out
 }
 
 // vcardContact extracts the interesting fields from a jCard (RFC 7095)

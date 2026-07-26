@@ -98,6 +98,56 @@ func TestLiveEmbeddedServers(t *testing.T) {
 	t.Logf("%d/%d embedded whois servers resolve", len(whoisServers)-len(failures), len(whoisServers))
 }
 
+func TestLiveQueryIP(t *testing.T) {
+	live(t)
+	rec, err := New().QueryIP("8.8.8.8")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rec.Source != SourceRDAP {
+		t.Errorf("Source = %q, want rdap", rec.Source)
+	}
+	if !rec.Found {
+		t.Error("Found = false")
+	}
+	t.Logf("8.8.8.8 via %s: %s (%s) %s-%s org=%q", rec.Server,
+		rec.Parsed.Handle, rec.Parsed.Name, rec.Parsed.StartAddress, rec.Parsed.EndAddress,
+		rec.Parsed.Entities)
+}
+
+func TestLiveQueryIPWhois(t *testing.T) {
+	live(t)
+	rec, err := New(WithPreferRDAP(false)).QueryIP("1.1.1.1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rec.Source != SourceWhois {
+		t.Errorf("Source = %q, want whois", rec.Source)
+	}
+	if !rec.Found {
+		t.Error("Found = false")
+	}
+	if rec.Parsed.Name == "" {
+		t.Error("Name empty")
+	}
+	t.Logf("1.1.1.1 via %s: netname=%s org=%q", rec.Server, rec.Parsed.Name, rec.Parsed.Organization)
+}
+
+func TestLiveQueryASN(t *testing.T) {
+	live(t)
+	rec, err := New().QueryASN(15169)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !rec.Found {
+		t.Error("Found = false")
+	}
+	if rec.Parsed.Name != "GOOGLE" {
+		t.Errorf("Name = %q", rec.Parsed.Name)
+	}
+	t.Logf("AS15169 via %s: %s", rec.Server, rec.Parsed.Name)
+}
+
 func TestLiveUKViaRDAP(t *testing.T) {
 	live(t)
 	// .uk deployed RDAP in 2022.

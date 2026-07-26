@@ -28,6 +28,7 @@ google.shop  → RDAP  (rdap.gmoregistry.net) .shop retired port 43 in 2026
 - **Embedded server map** — ~580 TLD → WHOIS server entries, cross-checked against `whois.iana.org`; unknown TLDs are discovered at runtime through the IANA referral service and cached.
 - **Thin-registry referral following** (optional) — enrich Verisign-style thin answers with the registrar's own WHOIS.
 - **IDN support** — built-in RFC 3492 punycode encoder (`münchen.de` → `xn--mnchen-3ya.de`), no external dependencies.
+- **IP & ASN lookups** — RDAP covers every allocated IP range and AS number via the five RIRs; the WHOIS fallback resolves the responsible RIR through the `whois.iana.org` referral and parses ARIN/RIPE/APNIC/LACNIC formats.
 
 ## Install
 
@@ -60,6 +61,28 @@ func main() {
 	fmt.Println(rec.Parsed.Expiry)            // 2027-05-31
 }
 ```
+
+### IP and ASN lookups
+
+```go
+rec, err := c.QueryIP("8.8.8.8") // → RDAP via rdap.arin.net
+if err != nil {
+	panic(err)
+}
+fmt.Println(rec.Source, rec.Server)              // rdap rdap.arin.net
+fmt.Println(rec.Parsed.Name)                     // GOGL
+fmt.Println(rec.Parsed.StartAddress, rec.Parsed.EndAddress) // 8.8.8.0 8.8.8.255
+fmt.Println(rec.Parsed.CIDR)                     // 8.8.8.0/24
+fmt.Println(rec.Parsed.Entities[0].Contact.Name) // Google LLC
+
+asn, err := c.QueryASN(15169) // RDAP only (bootstrap covers every allocated ASN)
+fmt.Println(asn.Parsed.Name) // GOOGLE
+```
+
+With RDAP disabled (`WithPreferRDAP(false)`), `QueryIP` resolves the
+responsible RIR through a `whois.iana.org` referral and parses the classic
+WHOIS response (ARIN `NetRange`/`CIDR`, RIPE/APNIC `inetnum`/`netname`,
+LACNIC …).
 
 ### Options
 
