@@ -55,7 +55,7 @@ func main() {
 	fmt.Println(rec.Source, rec.Server) // whois whois.denic.de
 	fmt.Println(rec.Registered)         // true
 	fmt.Println(rec.Parsed.Statuses)    // [connect]
-	fmt.Println(rec.Parsed.NameServers) // [ns1.google.com ...]
+	fmt.Println(rec.Parsed.NameServers) // []（DENIC 端口 43 仅返回 Domain+Status）
 	fmt.Println(rec.Parsed.Expiry)      // *time.Time（注册局不公开则为 nil）
 }
 ```
