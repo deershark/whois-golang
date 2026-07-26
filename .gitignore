@@ -1,0 +1,7 @@
+# Go build artifacts
+/whois-golang
+*.test
+*.out
+
+# Coverage
+coverage.txt

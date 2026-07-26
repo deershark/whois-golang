@@ -2,6 +2,11 @@
 
 [English](README.md) | 中文
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/deershark/whois-golang.svg)](https://pkg.go.dev/github.com/deershark/whois-golang)
+[![CI](https://github.com/deershark/whois-golang/actions/workflows/ci.yml/badge.svg)](https://github.com/deershark/whois-golang/actions/workflows/ci.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/deershark/whois-golang)](https://goreportcard.com/report/github.com/deershark/whois-golang)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 零依赖的 Go 域名注册信息查询库。
 
 **RDAP 优先，WHOIS 兜底。** 查询首先通过 [rdap.org](https://rdap.org) 引导服务（基于 [IANA RDAP bootstrap 注册表](https://data.iana.org/rdap/dns.json)，与 [deployment.rdap.org](https://deployment.rdap.org/) 同源）发起；若该后缀未接入 RDAP，自动回退到 43 端口的原始 WHOIS 协议，并用能理解各注册局迥异格式的解析器处理结果。

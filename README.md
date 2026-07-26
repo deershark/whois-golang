@@ -2,6 +2,11 @@
 
 English | [中文](README_CN.md)
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/deershark/whois-golang.svg)](https://pkg.go.dev/github.com/deershark/whois-golang)
+[![CI](https://github.com/deershark/whois-golang/actions/workflows/ci.yml/badge.svg)](https://github.com/deershark/whois-golang/actions/workflows/ci.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/deershark/whois-golang)](https://goreportcard.com/report/github.com/deershark/whois-golang)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A zero-dependency Go library for domain registration lookup.
 
 **RDAP first, WHOIS fallback.** Queries go through the [rdap.org](https://rdap.org) bootstrap service (built on the [IANA RDAP bootstrap registry](https://data.iana.org/rdap/dns.json), the same dataset behind [deployment.rdap.org](https://deployment.rdap.org/)). If the TLD has no RDAP deployment, the library automatically falls back to the classic WHOIS protocol on TCP port 43 — with a parser that actually understands the wildly different formats registries use.
