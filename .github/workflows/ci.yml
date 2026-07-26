@@ -45,6 +45,7 @@ jobs:
           check-latest: true
 
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v7
         with:
-          version: latest
+          # v2 binary required for the v2 config format (v6 ships v1).
+          version: v2.1.6
