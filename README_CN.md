@@ -48,15 +48,16 @@ import (
 
 func main() {
 	c := whois.New()
-	rec, err := c.Query("google.de")
+	rec, err := c.Query("google.jp") // .jp 未接入 RDAP → 回退 WHOIS
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(rec.Source, rec.Server) // whois whois.denic.de
+	fmt.Println(rec.Source, rec.Server) // whois whois.jprs.jp
 	fmt.Println(rec.Registered)         // true
-	fmt.Println(rec.Parsed.Statuses)    // [connect]
-	fmt.Println(rec.Parsed.NameServers) // []（DENIC 端口 43 仅返回 Domain+Status）
-	fmt.Println(rec.Parsed.Expiry)      // *time.Time（注册局不公开则为 nil）
+	fmt.Println(rec.Parsed.Statuses)    // [Active]
+	fmt.Println(rec.Parsed.NameServers) // [ns1.google.com ns2.google.com ns3.google.com ns4.google.com]
+	fmt.Println(rec.Parsed.Created)     // 2005-05-30
+	fmt.Println(rec.Parsed.Expiry)      // 2027-05-31
 }
 ```
 
