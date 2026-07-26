@@ -1,0 +1,13 @@
+Domain Name: baidu.com.cn
+ROID: 20021209s10011s00015174-cn
+Domain Status: clientDeleteProhibited
+Domain Status: clientUpdateProhibited
+Domain Status: clientTransferProhibited
+Registrant: 北京百度网讯科技有限公司
+Registrant Contact Email: eric@baidu.com
+Sponsoring Registrar: 互联网域名系统北京市工程研究中心有限公司
+Name Server: dns.baidu.com
+Name Server: baidu.com.cn
+Registration Time: 2000-02-15 00:00:00
+Expiration Time: 2029-02-15 00:00:00
+DNSSEC: unsigned

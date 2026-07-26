@@ -1,0 +1,2 @@
+Domain: this-domain-does-not-exist-9f8d7c.de
+Status: free

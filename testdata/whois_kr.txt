@@ -1,0 +1,53 @@
+query : naver.kr
+
+
+# KOREAN(UTF8)
+
+도메인이름                  : naver.kr
+등록인                      : 네이버주식회사
+등록인 주소                 : 경기도 성남시 분당구 불정로 6 (정자동,그린팩토리) &nbsp;
+등록인 우편번호             : 463867
+책임자                      : 네이버주식회사
+책임자 전자우편             : dl_ssl@navercorp.com
+책임자 전화번호             : +82.28293528
+등록일                      : 2007. 02. 28.
+최근 정보 변경일            : 2018. 02. 28.
+사용 종료일                 : 2027. 02. 28.
+정보공개여부                : Y
+등록대행자                  : (주)가비아(http://www.gabia.co.kr)
+DNSSEC                      : 미서명
+
+1차 네임서버 정보
+   호스트이름               : ns1.naver.com
+
+2차 네임서버 정보
+   호스트이름               : ns2.naver.com
+
+네임서버 이름이 .kr이 아닌 경우는 IP주소가 보이지 않습니다.
+
+
+# ENGLISH
+
+Domain Name                 : naver.kr
+Registrant                  : NAVER Corp.
+Registrant Address          : 6 Buljung-ro, Bundang-gu, Seongnam-si, Gyeonggi-do, 463-867, Korea, &nbsp;
+Registrant Zip Code         : 463867
+Administrative Contact(AC)  : NAVER Corp.
+AC E-Mail                   : dl_ssl@navercorp.com
+AC Phone Number             : +82.28293528
+Registered Date             : 2007. 02. 28.
+Last Updated Date           : 2018. 02. 28.
+Expiration Date             : 2027. 02. 28.
+Publishes                   : Y
+Authorized Agency           : Gabia, Inc.(http://www.gabia.co.kr)
+DNSSEC                      : unsigned
+
+Primary Name Server
+   Host Name                : ns1.naver.com
+
+Secondary Name Server
+   Host Name                : ns2.naver.com
+
+
+- KISA/KRNIC WHOIS Service -
+
